@@ -79,7 +79,6 @@ const updateStatusContact = async (req, res, next) => {
 const updateAvatar = async (req, res, next) => {
   const { _id } = req.body;
   const { path: tempUpload, filename } = req.file;
-  console.log(tempUpload);
   const avatarName = `${_id}_${filename}`;
   const resultUpload = path.join(avatarsDir, filename);
   await resizeAvatar(tempUpload);
