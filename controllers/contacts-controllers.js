@@ -1,8 +1,14 @@
+const gravatar = require("gravatar");
+const fs = require("fs/promises");
+const path = require("path");
+
+const resizeAvatar = require("../middlwares/resizeAvatar");
+
 const { ctrlWrapper } = require("../utils");
-
 const Contact = require("../models/contact");
-
 const { newHttpError } = require("../helpers");
+
+const avatarsDir = path.join(__dirname, "../", "public", "avatars");
 
 const listContacts = async (req, res, next) => {
   const { _id: owner } = req.user;
@@ -26,7 +32,20 @@ const getContactById = async (req, res, next) => {
 
 const addContact = async (req, res, next) => {
   const { _id: owner } = req.user;
-  const result = await Contact.create({ ...req.body, owner });
+  const { email } = req.body;
+  const avatarUrl = gravatar.url(email);
+  const contact = await Contact.findOne({ email });
+
+  if (contact) {
+    throw newHttpError(409, "Email already in use");
+  }
+
+  const result = await Contact.create({
+    ...req.body,
+    owner,
+    avatarUrl,
+  });
+
   res.status(201).json(result);
 };
 
@@ -57,6 +76,19 @@ const updateStatusContact = async (req, res, next) => {
   res.json(result);
 };
 
+const updateAvatar = async (req, res, next) => {
+  const { _id } = req.body;
+  const { path: tempUpload, filename } = req.file;
+  const avatarName = `${_id}_${filename}`;
+  const resultUpload = path.join(avatarsDir, filename);
+  await resizeAvatar(tempUpload);
+  await fs.rename(tempUpload, resultUpload);
+  const avatarUrl = path.join("avatar", avatarName);
+  await Contact.findByIdAndUpdate(_id, { avatarUrl });
+
+  res.json({ avatarUrl });
+};
+
 module.exports = {
   listContacts: ctrlWrapper(listContacts),
   getContactById: ctrlWrapper(getContactById),
@@ -64,4 +96,5 @@ module.exports = {
   removeContact: ctrlWrapper(removeContact),
   updateContact: ctrlWrapper(updateContact),
   updateStatusContact: ctrlWrapper(updateStatusContact),
+  updateAvatar: ctrlWrapper(updateAvatar),
 };

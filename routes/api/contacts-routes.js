@@ -4,7 +4,7 @@ const router = express.Router();
 const ctrl = require("../../controllers/contacts-controllers.js");
 const { validateBody } = require("../../utils");
 const schemas = require("../../schemas");
-const { authenticate } = require("../../middlwares/");
+const { authenticate, upload } = require("../../middlwares/");
 
 router.get("/", authenticate, ctrl.listContacts);
 
@@ -31,6 +31,13 @@ router.patch(
   authenticate,
   validateBody(schemas.favoriteUpdateSchemas),
   ctrl.updateStatusContact
+);
+
+router.patch(
+  "/avatars",
+  authenticate,
+  upload.single("avatar"),
+  ctrl.updateAvatar
 );
 
 module.exports = router;

@@ -5,6 +5,7 @@ const contactsValidationSchemas = Joi.object({
   email: Joi.string().required(),
   phone: Joi.string().required(),
   favorite: Joi.boolean(),
+  avatarUrl: Joi.string(),
 });
 
 module.exports = contactsValidationSchemas;
